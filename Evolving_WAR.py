@@ -27,6 +27,8 @@ war_pivot = pd.pivot_table(data = war,
 war_pivot_calc = pd.concat([war_pivot, war_pivot['D'] / war_pivot['All']], axis = 1)
 war_pivot_calc.reset_index(inplace = True)
 
+### RENAME COLUMNS!!!
+
 # Import team totals by season
 file_names = ['Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01.csv',
              'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-2.csv',
@@ -52,14 +54,24 @@ teams_seasons = pd.concat(file_list, axis = 0, ignore_index = True)
 teams_seasons.head()
 war_pivot_calc.head()
 
+### JOIN WAR_PIVOT_CALC AND TEAMS_SEASONS DFS ON TEAM AND SEASON 
+
 # Scrape standings
 
 import requests
 
-response_2019 = requests.get('https://www.nhl.com/standings/2018/conference')
+response_2019 = requests.get('https://www.hockey-reference.com/leagues/NHL_2019_standings.html')
 content_2019 = response_2019.content
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as soup
 
-parser_2019 = BeautifulSoup(content_2019, 'html.parser')
-parser_2019.body
+html_2019 = soup(content_2019, 'html.parser')
+table_2019 = html_2019.find_all('tr', attrs = {'class': 'full_table'})
+teams_2019 = html_2019.find_all('th', attrs = {'data-stat': 'team_name'})
+points_2019 = html_2019.find_all('td', attrs = {'data-stat': 'points'})
+
+# Find team name
+html_2019.find('th', attrs = {'data-stat': 'team name'}).text.strip()
+
+# Find points
+html_2019.find('td', attrs = {'data-stat': 'points'}).text.strip()
