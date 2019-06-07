@@ -24,12 +24,18 @@ war_pivot = pd.pivot_table(data = war,
                      margins = True,
                      fill_value = 0)
 
-war_pivot_calc = pd.concat([war_pivot, war_pivot['D'] / war_pivot['All']], axis = 1)
+war_pivot_calc = pd.concat([war_pivot, 
+                            war_pivot['D'] / war_pivot['All']], 
+                            axis = 1)
 war_pivot_calc.reset_index(inplace = True)
+war_pivot_calc.columns = ['Team',
+                         'Season',
+                         'D_WAR',
+                         'F_WAR',
+                         'All_WAR',
+                         'D_Pct']
 
-### RENAME COLUMNS!!!
-
-# Import team totals by season
+# Import team Expected Goals totals by season
 file_names = ['Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01.csv',
              'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-2.csv',
              'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-3.csv',
@@ -42,7 +48,6 @@ file_names = ['Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01.csv',
              'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-10.csv',
              'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-11.csv',
              'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-12.csv']
-
 file_list = []
 
 for filename in file_names:
@@ -67,11 +72,12 @@ from bs4 import BeautifulSoup as soup
 
 html_2019 = soup(content_2019, 'html.parser')
 table_2019 = html_2019.find_all('tr', attrs = {'class': 'full_table'})
-teams_2019 = html_2019.find_all('th', attrs = {'data-stat': 'team_name'})
+
+team_tag = []
+for i in range(0, len(table_2019)):
+    team_tag.append(table_2019[i].find('a')['href'])
+
 points_2019 = html_2019.find_all('td', attrs = {'data-stat': 'points'})
-
-# Find team name
-html_2019.find('th', attrs = {'data-stat': 'team name'}).text.strip()
-
-# Find points
-html_2019.find('td', attrs = {'data-stat': 'points'}).text.strip()
+points_list = []
+for i in range(0, len(points_2019)):
+    points_list.append(points_2019[i].text.strip())
