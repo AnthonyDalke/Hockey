@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import os
+import re
 
 # Set working director
 os.getcwd()
@@ -65,19 +66,23 @@ war_pivot_calc.head()
 
 import requests
 
-response_2019 = requests.get('https://www.hockey-reference.com/leagues/NHL_2019_standings.html')
-content_2019 = response_2019.content
+hf_url
+
+response = requests.get('https://www.hockey-reference.com/leagues/NHL_2019_standings.html')
+content = response.content
 
 from bs4 import BeautifulSoup as soup
 
-html_2019 = soup(content_2019, 'html.parser')
-table_2019 = html_2019.find_all('tr', attrs = {'class': 'full_table'})
+html = soup(content, 'html.parser')
+table = html.find_all('tr', attrs = {'class': 'full_table'})
 
 team_tag = []
-for i in range(0, len(table_2019)):
-    team_tag.append(table_2019[i].find('a')['href'])
+for i in range(0, len(table)):
+    team_tag.append(table[i].find('a')['href'])
+    str(team_tag[i])
+    team_tag[i] = team_tag[i].split('/')
 
-points_2019 = html_2019.find_all('td', attrs = {'data-stat': 'points'})
+points = html.find_all('td', attrs = {'data-stat': 'points'})
 points_list = []
-for i in range(0, len(points_2019)):
-    points_list.append(points_2019[i].text.strip())
+for i in range(0, len(points)):
+    points_list.append(points[i].text.strip())
