@@ -3,7 +3,6 @@
 import pandas as pd
 import numpy as np
 import os
-import re
 
 # Set working director
 os.getcwd()
@@ -57,16 +56,29 @@ for filename in file_names:
 
 teams_seasons = pd.concat(file_list, axis = 0, ignore_index = True)
 
-teams_seasons.head()
-war_pivot_calc.head()
+# Create list of unique seasons
+seasons_list = teams_seasons['season'].unique().tolist()
 
-### JOIN WAR_PIVOT_CALC AND TEAMS_SEASONS DFS ON TEAM AND SEASON 
+### JOIN WAR_PIVOT_CALC AND TEAMS_SEASONS xG_diff ON TEAM AND SEASON 
 
 # Scrape standings
 
 import requests
 
-hf_url
+hf_url = [
+        'https://www.hockey-reference.com/leagues/NHL_2019_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2018_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2017_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2016_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2015_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2014_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2013_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2012_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2011_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2010_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2009_standings.html',
+        'https://www.hockey-reference.com/leagues/NHL_2008_standings.html'
+        ]
 
 response = requests.get('https://www.hockey-reference.com/leagues/NHL_2019_standings.html')
 content = response.content
@@ -77,12 +89,16 @@ html = soup(content, 'html.parser')
 table = html.find_all('tr', attrs = {'class': 'full_table'})
 
 team_tag = []
+season_counter = 0
 for i in range(0, len(table)):
     team_tag.append(table[i].find('a')['href'])
     str(team_tag[i])
     team_tag[i] = team_tag[i].split('/')
+    team_tag[i][0] = seasons_list[season_counter]
 
 points = html.find_all('td', attrs = {'data-stat': 'points'})
 points_list = []
 for i in range(0, len(points)):
     points_list.append(points[i].text.strip())
+
+season_counter += 1
