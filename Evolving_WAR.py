@@ -31,11 +31,11 @@ war_df = pd.concat([war_pivot,
                             axis = 1)
 war_df.reset_index(inplace = True)
 war_df.columns = ['Team',
-                         'Season',
-                         'D_WAR',
-                         'F_WAR',
-                         'All_WAR',
-                         'D_Pct']
+                  'Season',
+                  'D_WAR',
+                  'F_WAR',
+                  'All_WAR',
+                  'D_Pct']
 
 # Import team Expected Goals totals by season
 xgoals_files = ['Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01.csv',
@@ -57,15 +57,34 @@ for filename in xgoals_files:
     xgoals_data.append(df)
 
 xgoals_df = pd.concat(xgoals_data, axis = 0, ignore_index = True)
+xgoals_df.columns = ['Team',
+                     'Season',
+                     'TOI',
+                     'GP',
+                     'GF',
+                     'GA',
+                     'G_Diff',
+                     'xGF',
+                     'xGA',
+                     'xG_Diff',
+                     'SF',
+                     'SA',
+                     'S_Diff',
+                     'FF',
+                     'FA',
+                     'F_Diff',
+                     'CF',
+                     'CA',
+                     'C_Diff']
 
 # Create list of unique seasons
 seasons_list = xgoals_df['season'].unique().tolist()
 
 # Merge war_df and xgoals_df
 stats_df1 = pd.merge(war_df[['Team', 'Season', 'All_WAR', 'D_Pct']], 
-                     xgoals_df[['Team', 'season', 'G_diff', 'xG_diff']], 
+                     xgoals_df[['Team', 'Season', 'G_Diff', 'xG_Diff']], 
                      left_on = ['Team', 'Season'], 
-                     right_on = ['Team', 'season'])
+                     right_on = ['Team', 'Season'])
 
 # Scrape standings
 
