@@ -132,5 +132,21 @@ for url in hf_url:
 points_df = pd.DataFrame(points_tag, columns = ['Points'])
 team_season_df.columns = ['Season', 'DF_Name', 'Team', 'HTML']
 
-# Merge points_df and team_season_df
+# Concatenate points_df and team_season_df
+team_season_df.reset_index(inplace = True, drop = True)
+points_df.reset_index(inplace = True, drop = True)
 stats_df2 = pd.concat([team_season_df, points_df], axis = 1)
+stats_df2.drop(['index', 'DF_Name', 'HTML'], axis = 1, inplace = True)
+
+# Compare unique values of Seaason and Team columns
+df2_season = sorted(stats_df2['Season'].unique().tolist())
+df1_season = sorted(stats_df1['Season'].unique().tolist())
+df2_team = sorted(stats_df2['Team'].unique().tolist())
+df1_team = sorted(stats_df1['Team'].unique().tolist())
+
+season_check = []
+team_check = []
+for i in range(0, len(df2_season) - 1):
+    season_check.append(df2_season[i] == df1_season[i])
+for i in range(0, len(df2_team) - 1):
+    team_check.append(df2_team[i] == df1_team[i])
