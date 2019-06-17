@@ -3,6 +3,9 @@
 import pandas as pd
 import numpy as np
 import os
+from bs4 import BeautifulSoup as soup
+import requests
+from pandas import DataFrame
 
 # Set working directory
 os.getcwd()
@@ -27,8 +30,8 @@ war_pivot = pd.pivot_table(data = war,
 
 # Add calculation of percentage of total WAR contributed by defensemen
 war_df = pd.concat([war_pivot, 
-                            war_pivot['D'] / war_pivot['All']], 
-                            axis = 1)
+                    war_pivot['D'] / war_pivot['All']], 
+                    axis = 1)
 war_df.reset_index(inplace = True)
 war_df.columns = ['Team',
                   'Season',
@@ -78,7 +81,7 @@ xgoals_df.columns = ['Team',
                      'C_Diff']
 
 # Create list of unique seasons
-seasons_list = xgoals_df['season'].unique().tolist()
+seasons_list = xgoals_df['Season'].unique().tolist()
 
 # Merge war_df and xgoals_df
 stats_df1 = pd.merge(war_df[['Team', 'Season', 'All_WAR', 'D_Pct']], 
@@ -87,8 +90,9 @@ stats_df1 = pd.merge(war_df[['Team', 'Season', 'All_WAR', 'D_Pct']],
                      right_on = ['Team', 'Season'])
 
 # Scrape standings
-
-import requests
+team_season_df = pd.DataFrame()
+points_tag = []
+season_counter = 0
 
 hf_url = ['https://www.hockey-reference.com/leagues/NHL_2019_standings.html',
          'https://www.hockey-reference.com/leagues/NHL_2018_standings.html',
@@ -103,25 +107,30 @@ hf_url = ['https://www.hockey-reference.com/leagues/NHL_2019_standings.html',
          'https://www.hockey-reference.com/leagues/NHL_2009_standings.html',
          'https://www.hockey-reference.com/leagues/NHL_2008_standings.html']
 
-response = requests.get('https://www.hockey-reference.com/leagues/NHL_2019_standings.html')
-content = response.content
+for url in hf_url:    
+    team_tag = []
+    response = requests.get(url)
+    content = response.content
 
-from bs4 import BeautifulSoup as soup
+    html = soup(content, 'html.parser')
+    table = html.find_all('tr', attrs = {'class': 'full_table'})
+    
+    for i in range(0, len(table)):
+        team_tag.append(table[i].find('a')['href'])
+        str(team_tag[i])
+        team_tag[i] = team_tag[i].split('/')
+        team_tag[i][0] = seasons_list[season_counter]
+    
+    points = html.find_all('td', attrs = {'data-stat': 'points'})
+    for i in range(0, len(points)):
+        points_tag.append(points[i].text.strip())
+  
+    team_df = DataFrame.from_records(team_tag)
+    team_season_df = team_season_df.append(team_df)
+    season_counter += 1    
 
-html = soup(content, 'html.parser')
-table = html.find_all('tr', attrs = {'class': 'full_table'})
+points_df = pd.DataFrame(points_tag, columns = ['Points'])
+team_season_df.columns = ['Season', 'DF_Name', 'Team', 'HTML']
 
-team_tag = []
-season_counter = 0
-for i in range(0, len(table)):
-    team_tag.append(table[i].find('a')['href'])
-    str(team_tag[i])
-    team_tag[i] = team_tag[i].split('/')
-    team_tag[i][0] = seasons_list[season_counter]
-
-points = html.find_all('td', attrs = {'data-stat': 'points'})
-points_list = []
-for i in range(0, len(points)):
-    points_list.append(points[i].text.strip())
-
-season_counter += 1
+# Merge points_df and team_season_df
+stats_df2 = pd.concat([team_season_df, points_df], axis = 1)
