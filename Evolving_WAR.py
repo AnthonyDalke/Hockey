@@ -6,6 +6,7 @@ import os
 from bs4 import BeautifulSoup as soup
 import requests
 from pandas import DataFrame
+import matplotlib.pyplot as plt
 
 # Set working directory
 os.getcwd()
@@ -136,7 +137,7 @@ team_season_df.columns = ['Season', 'DF_Name', 'Team', 'HTML']
 team_season_df.reset_index(inplace = True, drop = True)
 points_df.reset_index(inplace = True, drop = True)
 stats_df2 = pd.concat([team_season_df, points_df], axis = 1)
-stats_df2.drop(['index', 'DF_Name', 'HTML'], axis = 1, inplace = True)
+stats_df2.drop(['DF_Name', 'HTML'], axis = 1, inplace = True)
 
 # Compare unique values of Seaason and Team columns
 df2_season = sorted(stats_df2['Season'].unique().tolist())
@@ -150,3 +151,43 @@ for i in range(0, len(df2_season) - 1):
     season_check.append(df2_season[i] == df1_season[i])
 for i in range(0, len(df2_team) - 1):
     team_check.append(df2_team[i] == df1_team[i])
+
+season_check.index(season_check == 'False')
+team_check.index(team_check == 'False')
+df1_team[14:]
+df2_team[14:]
+
+# Replace stats_df2 team names that don't match stats_df1
+
+stats_df2['Team'].replace(['LAK',
+                           'NJD',
+                           'SJS',
+                           'TBL',
+                           'VEG',
+                           'PHX'],
+                          ['L.A',
+                           'N.J',
+                           'S.J',
+                           'T.B',
+                           'VGK',
+                           'ARI'],
+                           inplace = True)
+
+# Create final analysis dataframe
+
+analysis_df = pd.merge(stats_df1, 
+                       stats_df2, 
+                       left_on = ['Team', 'Season'], 
+                       right_on = ['Team', 'Season'])
+
+# Plot D_Pct against Points
+plt.scatter(analysis_df['D_Pct'], analysis_df['Points'])
+plt.xlabel('Percentage of WAR from Defensemen')
+plt.ylabel('Points')
+plt.show()
+
+analysis_df[analysis_df['D_Pct'] < 0]
+
+# Plot All_WAR against Points
+
+# Plot D_Pct against G_Diff and xG_Diff
