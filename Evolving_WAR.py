@@ -8,6 +8,7 @@ import requests
 from pandas import DataFrame
 import matplotlib.pyplot as plt
 from sklearn import preprocessing as pp
+from scipy import stats
 
 # Set working directory
 os.getcwd()
@@ -22,25 +23,12 @@ war.head()
 war.info
 
 # Create pivot table of total WAR and games played by team, season and position
-war_pivot = pd.pivot_table(data = war,
-                     values = 'WAR',
-                     index = ['Team', 'season'],
-                     columns = 'position',
-                     aggfunc = np.sum,
-                     margins = True,
-                     fill_value = 0)
+war_pivot = pd.pivot_table(data = war, values = 'WAR', index = ['Team', 'season'], columns = 'position', aggfunc = np.sum, margins = True, fill_value = 0)
 
 # Add calculation of percentage of total WAR contributed by defensemen
-war_df = pd.concat([war_pivot, 
-                    war_pivot['D'] / war_pivot['All']], 
-                    axis = 1)
+war_df = pd.concat([war_pivot, war_pivot['D'] / war_pivot['All']], axis = 1)
 war_df.reset_index(inplace = True)
-war_df.columns = ['Team',
-                  'Season',
-                  'D_WAR',
-                  'F_WAR',
-                  'All_WAR',
-                  'D_Pct']
+war_df.columns = ['Team', 'Season', 'D_WAR', 'F_WAR', 'All_WAR', 'D_Pct']
 
 # Import team Expected Goals totals by season
 xgoals_files = ['Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01.csv',
@@ -182,6 +170,12 @@ analysis_df = pd.merge(stats_df1,
                        right_on = ['Team', 'Season'])
 analysis_df['Points'] = pd.to_numeric(analysis_df['Points'])
 
+# Plot All_WAR against Points
+plt.scatter(analysis_df_reduced['All_WAR'], analysis_df_reduced['Points'], c = 'g', edgecolors = 'y')
+plt.xlabel('Total Team WAR')
+plt.ylabel('Points')
+plt.show()
+
 # Plot D_Pct against Points
 plt.scatter(analysis_df['D_Pct'], analysis_df['Points'])
 plt.xlabel('Percentage of WAR from Defensemen')
@@ -196,46 +190,57 @@ analysis_df[analysis_df['D_Pct'] > 1]
 # Plot D_Pct against Points without outliers
 analysis_df_reduced = analysis_df[analysis_df['D_Pct'] > -1]
 analysis_df_reduced = analysis_df_reduced[analysis_df_reduced['D_Pct'] < 1]
-plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['Points'])
+plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['Points'], c = 'b', edgecolors = 'y')
 plt.xlabel('Percentage of WAR from Defensemen')
 plt.ylabel('Points')
 plt.show()
 
-# Normalized D_Pct and Points fields
-plot_array = analysis_df_reduced[['D_Pct', 'Points']]
-min_max_scaler = pp.MinMaxScaler()
-plot_array = min_max_scaler.fit_transform(plot_array)
+# Add linear trendline to plot
 
-# Plot normalized D_Pct against normalized Points
-plt.scatter(plot_array[:,0], plot_array[:,1])
-plt.xlabel('Percentage of Normalized WAR from Defensemen')
-plt.ylabel('Normalized Points')
-plt.show()
-
-# Plot All_WAR against Points
-plt.scatter(analysis_df_reduced['All_WAR'], analysis_df_reduced['Points'])
-plt.xlabel('Total Team WAR')
-plt.ylabel('Points')
-plt.show()
-
-# Plot G_Diff and xG_Diff against Points
-plt.scatter(analysis_df_reduced['G_Diff'], analysis_df_reduced['Points'])
-plt.xlabel('Goal Differential')
-plt.ylabel('Points')
-plt.show()
-
-plt.scatter(analysis_df_reduced['xG_Diff'], analysis_df_reduced['Points'])
-plt.xlabel('Expected Goal Differential')
-plt.ylabel('Points')
-plt.show()
-
-# Plot D_Pct against G_Diff and xG_Diff
-plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['G_Diff'])
+slope, intercept, r_value, p_value, std_err = stats.linregress(analysis_df_reduced['D_Pct'], analysis_df_reduced['Points'])
+line = slope * analysis_df_reduced['D_Pct'] + intercept
+plt.plot(analysis_df_reduced['D_Pct'], analysis_df_reduced['Points'], 'o', analysis_df_reduced['D_Pct'], line, mfc = 'b', mec = 'y')
 plt.xlabel('Percentage of WAR from Defensemen')
-plt.ylabel('Goal Differential')
+plt.ylabel('Points')
 plt.show()
+print('r-squared: ', r_value ** 2)
 
-plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['xG_Diff'])
-plt.xlabel('Percentage of WAR from Defensemen')
-plt.ylabel('Expected Goal Differential')
-plt.show()
+### Extra code
+
+## Normalized D_Pct and Points fields
+#plot_array = analysis_df_reduced[['D_Pct', 'Points']]
+#min_max_scaler = pp.MinMaxScaler()
+#plot_array = min_max_scaler.fit_transform(plot_array)
+
+## Plot normalized D_Pct against normalized Points
+#plt.scatter(plot_array[:, 0], plot_array[:, 1])
+#plt.xlabel('Percentage of Normalized WAR from Defensemen')
+#plt.ylabel('Normalized Points')
+#plt.show()
+
+## Plot trendline of D_Pct vs. Points
+#slope, intercept, r_value, p_value, std_err = stats.linregress(plot_array[:,0], plot_array[:,1])
+#line = slope * plot_array[:, 0] + intercept
+#plt.plot(plot_array[:,0], plot_array[:,1], 'o', plot_array[:,0], line)
+
+## Plot G_Diff and xG_Diff against Points
+#plt.scatter(analysis_df_reduced['G_Diff'], analysis_df_reduced['Points'], c = 'c', edgecolors = 'm')
+#plt.xlabel('Goal Differential')
+#plt.ylabel('Points')
+#plt.show()
+
+#plt.scatter(analysis_df_reduced['xG_Diff'], analysis_df_reduced['Points'], c = 'w', edgecolors = 'k')
+#plt.xlabel('Expected Goal Differential')
+#plt.ylabel('Points')
+#plt.show()
+
+## Plot D_Pct against G_Diff and xG_Diff
+#plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['G_Diff'], c = 'y', edgecolors = 'b')
+#plt.xlabel('Percentage of WAR from Defensemen')
+#plt.ylabel('Goal Differential')
+#plt.show()
+
+#plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['xG_Diff'], c = 'k', edgecolors = 'r')
+#plt.xlabel('Percentage of WAR from Defensemen')
+#plt.ylabel('Expected Goal Differential')
+#plt.show()
