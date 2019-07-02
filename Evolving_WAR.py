@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup as soup
 import requests
 from pandas import DataFrame
 import matplotlib.pyplot as plt
-from sklearn import preprocessing as pp
 from scipy import stats
 
 # Set working directory
@@ -26,23 +25,12 @@ war.info
 war_pivot = pd.pivot_table(data = war, values = 'WAR', index = ['Team', 'season'], columns = 'position', aggfunc = np.sum, margins = True, fill_value = 0)
 
 # Add calculation of percentage of total WAR contributed by defensemen
-war_df = pd.concat([war_pivot, war_pivot['D'] / war_pivot['All']], axis = 1)
+war_df = pd.concat([war_pivot, war_pivot['D'] / war_pivot['All'] * 100], axis = 1)
 war_df.reset_index(inplace = True)
 war_df.columns = ['Team', 'Season', 'D_WAR', 'F_WAR', 'All_WAR', 'D_Pct']
 
 # Import team Expected Goals totals by season
-xgoals_files = ['Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-2.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-3.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-4.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-5.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-6.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-7.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-8.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-9.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-10.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-11.csv',
-               'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-12.csv']
+xgoals_files = ['Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-2.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-3.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-4.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-5.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-6.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-7.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-8.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-9.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-10.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-11.csv', 'Evolving_Hockey_standard_team_stats_All_no_adj_2019-05-01-12.csv']
 xgoals_data = []
 
 for filename in xgoals_files:
@@ -50,52 +38,20 @@ for filename in xgoals_files:
     xgoals_data.append(df)
 
 xgoals_df = pd.concat(xgoals_data, axis = 0, ignore_index = True)
-xgoals_df.columns = ['Team',
-                     'Season',
-                     'TOI',
-                     'GP',
-                     'GF',
-                     'GA',
-                     'G_Diff',
-                     'xGF',
-                     'xGA',
-                     'xG_Diff',
-                     'SF',
-                     'SA',
-                     'S_Diff',
-                     'FF',
-                     'FA',
-                     'F_Diff',
-                     'CF',
-                     'CA',
-                     'C_Diff']
+xgoals_df.columns = ['Team', 'Season', 'TOI', 'GP', 'GF', 'GA', 'G_Diff', 'xGF', 'xGA', 'xG_Diff', 'SF', 'SA', 'S_Diff', 'FF', 'FA', 'F_Diff', 'CF', 'CA', 'C_Diff']
 
 # Create list of unique seasons
 seasons_list = xgoals_df['Season'].unique().tolist()
 
 # Merge war_df and xgoals_df
-stats_df1 = pd.merge(war_df[['Team', 'Season', 'All_WAR', 'D_Pct']], 
-                     xgoals_df[['Team', 'Season', 'G_Diff', 'xG_Diff']], 
-                     left_on = ['Team', 'Season'], 
-                     right_on = ['Team', 'Season'])
+stats_df1 = pd.merge(war_df[['Team', 'Season', 'All_WAR', 'D_Pct']], xgoals_df[['Team', 'Season', 'G_Diff', 'xG_Diff']], left_on = ['Team', 'Season'], right_on = ['Team', 'Season'])
 
 # Scrape standings
 team_season_df = pd.DataFrame()
 points_tag = []
 season_counter = 0
 
-hf_url = ['https://www.hockey-reference.com/leagues/NHL_2019_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2018_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2017_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2016_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2015_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2014_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2013_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2012_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2011_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2010_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2009_standings.html',
-         'https://www.hockey-reference.com/leagues/NHL_2008_standings.html']
+hf_url = ['https://www.hockey-reference.com/leagues/NHL_2019_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2018_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2017_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2016_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2015_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2014_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2013_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2012_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2011_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2010_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2009_standings.html', 'https://www.hockey-reference.com/leagues/NHL_2008_standings.html']
 
 for url in hf_url:    
     team_tag = []
@@ -141,40 +97,14 @@ for i in range(0, len(df2_season) - 1):
 for i in range(0, len(df2_team) - 1):
     team_check.append(df2_team[i] == df1_team[i])
 
-season_check.index(season_check == 'False')
-team_check.index(team_check == 'False')
-df1_team[14:]
-df2_team[14:]
-
 # Replace stats_df2 team names that don't match stats_df1
 
-stats_df2['Team'].replace(['LAK',
-                           'NJD',
-                           'SJS',
-                           'TBL',
-                           'VEG',
-                           'PHX'],
-                          ['L.A',
-                           'N.J',
-                           'S.J',
-                           'T.B',
-                           'VGK',
-                           'ARI'],
-                           inplace = True)
+stats_df2['Team'].replace(['LAK', 'NJD', 'SJS', 'TBL', 'VEG', 'PHX'], ['L.A', 'N.J', 'S.J', 'T.B', 'VGK', 'ARI'], inplace = True)
 
 # Create final analysis dataframe
 
-analysis_df = pd.merge(stats_df1, 
-                       stats_df2, 
-                       left_on = ['Team', 'Season'], 
-                       right_on = ['Team', 'Season'])
+analysis_df = pd.merge(stats_df1, stats_df2, left_on = ['Team', 'Season'], right_on = ['Team', 'Season'])
 analysis_df['Points'] = pd.to_numeric(analysis_df['Points'])
-
-# Plot All_WAR against Points
-plt.scatter(analysis_df_reduced['All_WAR'], analysis_df_reduced['Points'], c = 'g', edgecolors = 'y')
-plt.xlabel('Total Team WAR')
-plt.ylabel('Points')
-plt.show()
 
 # Plot D_Pct against Points
 plt.scatter(analysis_df['D_Pct'], analysis_df['Points'])
@@ -205,7 +135,14 @@ plt.ylabel('Points')
 plt.show()
 print('r-squared: ', r_value ** 2)
 
+# Plot All_WAR against Points
+plt.scatter(analysis_df_reduced['All_WAR'], analysis_df_reduced['Points'], c = 'g', edgecolors = 'y')
+plt.xlabel('Total Team WAR')
+plt.ylabel('Points')
+plt.show()
+
 ### Extra code
+#from sklearn import preprocessing as pp
 
 ## Normalized D_Pct and Points fields
 #plot_array = analysis_df_reduced[['D_Pct', 'Points']]
@@ -244,3 +181,6 @@ print('r-squared: ', r_value ** 2)
 #plt.xlabel('Percentage of WAR from Defensemen')
 #plt.ylabel('Expected Goal Differential')
 #plt.show()
+
+#season_check.index(season_check == 'False')
+#team_check.index(team_check == 'False')
