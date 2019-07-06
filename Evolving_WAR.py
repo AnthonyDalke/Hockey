@@ -113,13 +113,13 @@ plt.ylabel('Points')
 plt.yticks(np.arange(36, 128, step = 10))
 plt.show()
 
-# Investigate outliers
-analysis_df[analysis_df['D_Pct'] < -1]
-analysis_df[analysis_df['D_Pct'] > 1]
+# Investigate and remove outliers
+analysis_df[analysis_df['D_Pct'] < -100]
+analysis_df[analysis_df['D_Pct'] > 100]
+analysis_df_reduced = analysis_df[analysis_df['D_Pct'] > -100]
+analysis_df_reduced = analysis_df_reduced[analysis_df_reduced['D_Pct'] < 100]
 
 # Plot D_Pct against Points without outliers
-analysis_df_reduced = analysis_df[analysis_df['D_Pct'] > -1]
-analysis_df_reduced = analysis_df_reduced[analysis_df_reduced['D_Pct'] < 1]
 plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['Points'], c = 'b', edgecolors = 'y')
 plt.xlabel('Percentage of WAR from Defensemen')
 plt.ylabel('Points')
@@ -141,6 +141,28 @@ plt.xlabel('Total Team WAR')
 plt.ylabel('Points')
 plt.show()
 
+# Plot G_Diff and xG_Diff against Points
+plt.scatter(analysis_df_reduced['G_Diff'], analysis_df_reduced['Points'], c = 'c', edgecolors = 'm')
+plt.xlabel('Goal Differential')
+plt.ylabel('Points')
+plt.show()
+
+plt.scatter(analysis_df_reduced['xG_Diff'], analysis_df_reduced['Points'], c = 'y', edgecolors = 'k')
+plt.xlabel('Expected Goal Differential')
+plt.ylabel('Points')
+plt.show()
+
+# Plot D_Pct against G_Diff and xG_Diff
+plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['G_Diff'], c = 'y', edgecolors = 'b')
+plt.xlabel('Percentage of WAR from Defensemen')
+plt.ylabel('Goal Differential')
+plt.show()
+
+plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['xG_Diff'], c = 'r', edgecolors = 'b')
+plt.xlabel('Percentage of WAR from Defensemen')
+plt.ylabel('Expected Goal Differential')
+plt.show()
+
 ### Extra code
 #from sklearn import preprocessing as pp
 
@@ -155,32 +177,10 @@ plt.show()
 #plt.ylabel('Normalized Points')
 #plt.show()
 
-## Plot trendline of D_Pct vs. Points
+## Plot trendline of normalized D_Pct vs. Points
 #slope, intercept, r_value, p_value, std_err = stats.linregress(plot_array[:,0], plot_array[:,1])
 #line = slope * plot_array[:, 0] + intercept
 #plt.plot(plot_array[:,0], plot_array[:,1], 'o', plot_array[:,0], line)
-
-## Plot G_Diff and xG_Diff against Points
-#plt.scatter(analysis_df_reduced['G_Diff'], analysis_df_reduced['Points'], c = 'c', edgecolors = 'm')
-#plt.xlabel('Goal Differential')
-#plt.ylabel('Points')
-#plt.show()
-
-#plt.scatter(analysis_df_reduced['xG_Diff'], analysis_df_reduced['Points'], c = 'w', edgecolors = 'k')
-#plt.xlabel('Expected Goal Differential')
-#plt.ylabel('Points')
-#plt.show()
-
-## Plot D_Pct against G_Diff and xG_Diff
-#plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['G_Diff'], c = 'y', edgecolors = 'b')
-#plt.xlabel('Percentage of WAR from Defensemen')
-#plt.ylabel('Goal Differential')
-#plt.show()
-
-#plt.scatter(analysis_df_reduced['D_Pct'], analysis_df_reduced['xG_Diff'], c = 'k', edgecolors = 'r')
-#plt.xlabel('Percentage of WAR from Defensemen')
-#plt.ylabel('Expected Goal Differential')
-#plt.show()
 
 #season_check.index(season_check == 'False')
 #team_check.index(team_check == 'False')
